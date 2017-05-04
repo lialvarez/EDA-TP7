@@ -1,7 +1,7 @@
 #ifndef USEREVENTSOURCE_H
 #define USEREVENTSOURCE
 
-#include "Screen.h"
+
 #include "generEventSource.h"
 #include <vector>
 #include <fstream>
@@ -14,7 +14,9 @@ public:
 
 	userEventSource();
 	~userEventSource();
+
 	bool isThereEvent();
+	userEvents getInputEvent();
 
 	//Hay que crear las clases genericEvent primero
 	//esta funcion deberia devolver el evnto ingresado

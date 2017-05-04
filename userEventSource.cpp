@@ -1,6 +1,5 @@
 #include "userEventSource.h"
-#include "parseCmdLine.h"
-#include "Callback.h"
+#include "Screen.h"
 #include <boost\algorithm\string\classification.hpp>
 #include <boost\algorithm\string\split.hpp>
 
@@ -18,6 +17,11 @@ userEventSource::~userEventSource()
 {
 }
 
+userEvents userEventSource::getInputEvent()
+{
+	return inputEvent;
+}
+
 void userEventSource::restartTerminal()
 {
 	clear();
@@ -28,7 +32,7 @@ void userEventSource::restartTerminal()
 
 bool userEventSource::isThereEvent()
 {
-	bool ret;
+	bool ret = false;
 	inputChar = getch();
 	
 	switch (inputChar)
@@ -48,7 +52,7 @@ bool userEventSource::isThereEvent()
 			buffer.pop_back();
 			delch();
 		}
-		if (terminalWindow->_curx == 10)	//Posicion donde arranca la linea de comando
+		if (terminalWindow->_curx == 6)	//Posicion donde arranca la linea de comando
 		{
 			terminalWindow->_curx++;	//Para que el cursor no pse vaya del area permitida
 		}
@@ -60,7 +64,7 @@ bool userEventSource::isThereEvent()
 		command = std::string(buffer.begin(), buffer.end());	//Almaceno la linea de comando ingresada en command
 		std::transform(command.begin(), command.end(), command.begin(), tolower);	//
 		boost::split(words, command, boost::is_any_of(", "), boost::token_compress_on);	//Se separan las palabras ingresadas
-		
+
 		if (words.size() == 1)
 		{
 			if (strcmp(words[0].c_str(), "help") == 0)
@@ -68,9 +72,14 @@ bool userEventSource::isThereEvent()
 				inputEvent = HELP;
 				ret = true;
 			}
-			if (strcmp(words[0].c_str(), "quit") == 0)
+			else if (strcmp(words[0].c_str(), "quit") == 0)
 			{
 				inputEvent = QUIT;
+				ret = true;
+			}
+			else
+			{
+				inputEvent = INVALID;
 				ret = true;
 			}
 		}
@@ -91,8 +100,7 @@ bool userEventSource::isThereEvent()
 				}
 
 			}
-
-			if (strcmp(words[0].c_str(), "get") == 0)
+			else if (strcmp(words[0].c_str(), "get") == 0)
 			{
 				fileToTransfer.open(words[1].c_str());
 				if (fileToTransfer.fail())
@@ -107,10 +115,10 @@ bool userEventSource::isThereEvent()
 				}
 
 			}
-
 			else
 			{
-
+				inputEvent = INVALID;
+				ret = true;
 			}
 		}
 		else
@@ -118,6 +126,12 @@ bool userEventSource::isThereEvent()
 			ret = true;
 			inputEvent = INVALID;
 		}
+		buffer.clear();
+		words.clear();
+
+		//Esto es para debug, deberia hacerse luego del dispatcher
+		restartTerminal();
+
 		break;
 
 	default:
